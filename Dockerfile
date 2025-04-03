@@ -4,6 +4,6 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 RUN python -c "import whisper;whisper.load_model('large')"
 RUN apt update
-RUN apt install ffmpeg
+RUN apt install ffmpeg -y
 COPY *.py .
 CMD [ "python", "./index.py" ]
