@@ -3,7 +3,6 @@ from os import environ
 from time import sleep
 
 import whisper
-from whisper.utils import get_writer
 
 search_path = Path(environ.get('SEARCH_PATH', '/files'))
 wait_time = int(environ.get('INTERVAL', '1800'))
@@ -16,13 +15,10 @@ model = whisper.load_model('large')
 def transcribe(audio_file_path, target_file_path):
     result = model.transcribe(audio_file_path)
 
-    target_path = Path(target_file_path)
-    target_path.resolve()
-
-    writer = get_writer('tsv', str(target_path.parent))
-    writer(result, str(target_path.name))
     with open(target_file_path, 'w') as f:
-        f.write(result["text"])
+        for segment in result["segments"]:
+            f.write(segment["text"])
+            f.write("\n")
 
 while True:
     for extension in file_extensions:
