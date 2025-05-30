@@ -13,7 +13,7 @@ file_extensions = [".{}".format(f) for f in file_extensions.split(',')]
 model = whisper.load_model('large')
 
 def transcribe(audio_file_path, target_file_path):
-    result = model.transcribe(audio_file_path)
+    result = model.transcribe(audio_file_path, language="en")
 
     with open(target_file_path, 'w') as f:
         for segment in result["segments"]:
