@@ -6,4 +6,4 @@ RUN python -c "import whisper;whisper.load_model('large')"
 RUN apt update
 RUN apt install ffmpeg -y
 COPY *.py .
-CMD [ "python", "./index.py" ]
+CMD [ "python", "-u", "./index.py" ]

@@ -4,6 +4,8 @@ from time import sleep
 
 import whisper
 
+print("Starting v3")
+
 search_path = Path(environ.get('SEARCH_PATH', '/files'))
 wait_time = int(environ.get('INTERVAL', '1800'))
 file_extensions = environ.get('FILE_EXTENSIONS', 'mp3')
