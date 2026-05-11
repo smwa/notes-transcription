@@ -1,6 +1,8 @@
 from pathlib import Path
 from os import environ
 from time import sleep
+from tempfile import NamedTemporaryFile
+import subprocess
 
 import whisper
 
@@ -21,9 +23,18 @@ if enable_denoise:
     df_model, df_state, _ = init_df()
 
 def denoise(audio_file_path, denoised_file_path):
-    audio, _ = load_audio(audio_file_path, sr=df_state.sr())
-    enhanced = enhance(df_model, df_state, audio)
-    save_audio(denoised_file_path, enhanced, df_state.sr())
+    with NamedTemporaryFile(suffix='.wav', delete=False) as tmp:
+        tmp_path = tmp.name
+    try:
+        subprocess.run(
+            ['ffmpeg', '-i', audio_file_path, '-ar', str(df_state.sr()), '-ac', '1', '-y', tmp_path],
+            check=True, capture_output=True
+        )
+        audio, _ = load_audio(tmp_path, sr=df_state.sr())
+        enhanced = enhance(df_model, df_state, audio)
+        save_audio(denoised_file_path, enhanced, df_state.sr())
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
 
 def transcribe(audio_file_path, target_file_path):
     result = model.transcribe(audio_file_path, language="en")
