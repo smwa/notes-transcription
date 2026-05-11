@@ -46,6 +46,14 @@ def denoise(audio_file_path, denoised_file_path):
     finally:
         Path(tmp_path).unlink(missing_ok=True)
 
+def convert_wav_to_mp3(wav_path):
+    mp3_path = wav_path.with_suffix('.mp3')
+    subprocess.run(
+        ['ffmpeg', '-i', str(wav_path), '-q:a', '2', '-y', str(mp3_path)],
+        check=True, capture_output=True
+    )
+    wav_path.unlink()
+
 def transcribe(audio_file_path, target_file_path):
     result = model.transcribe(audio_file_path, language="en")
 
@@ -77,5 +85,11 @@ while True:
                 continue
             print("Transcribing {}".format(source_file_path))
             transcribe(source_file_path, target_file_path)
+
+    for wav_file in search_path.glob('**/*.wav'):
+        if not wav_file.is_file():
+            continue
+        print("Converting {} to mp3".format(wav_file))
+        convert_wav_to_mp3(wav_file)
 
     sleep(wait_time)
