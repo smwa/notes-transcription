@@ -42,6 +42,8 @@ while True:
                 continue
             file.resolve()
             source_file_path = str(file)
+            if denoised_suffix in file.name:
+                continue
 
             if enable_denoise:
                 denoised_file_path = '{}.{}'.format(source_file_path, denoised_suffix)
