@@ -17,7 +17,7 @@ enable_denoise = True
 denoised_suffix = environ.get('DENOISED_SUFFIX', 'denoised.wav')
 
 file_extensions = [".{}".format(f) for f in file_extensions.split(',')]
-model = whisper.load_model('turbo')
+model = whisper.load_model('medium')
 
 if enable_denoise:
     from df.enhance import enhance, init_df, load_audio, save_audio
