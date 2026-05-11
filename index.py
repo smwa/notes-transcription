@@ -76,7 +76,7 @@ while True:
 
             if enable_denoise:
                 denoised_file_path = '{}.{}'.format(source_file_path, denoised_suffix)
-                if not Path(denoised_file_path).exists():
+                if not Path(denoised_file_path).exists() and not Path(denoised_file_path).with_suffix('.mp3').exists():
                     print("Denoising {}".format(source_file_path))
                     denoise(source_file_path, denoised_file_path)
 
