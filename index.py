@@ -4,15 +4,26 @@ from time import sleep
 
 import whisper
 
-print("Starting v3")
+print("Starting v4")
 
 search_path = Path(environ.get('SEARCH_PATH', '/files'))
 wait_time = int(environ.get('INTERVAL', '1800'))
 file_extensions = environ.get('FILE_EXTENSIONS', 'mp3')
 target_file_extension = environ.get('TARGET_FILE_EXTENSION', 'md')
+enable_denoise = True
+denoised_suffix = environ.get('DENOISED_SUFFIX', 'denoised.wav')
 
 file_extensions = [".{}".format(f) for f in file_extensions.split(',')]
 model = whisper.load_model('large')
+
+if enable_denoise:
+    from df.enhance import enhance, init_df, load_audio, save_audio
+    df_model, df_state, _ = init_df()
+
+def denoise(audio_file_path, denoised_file_path):
+    audio, _ = load_audio(audio_file_path, sr=df_state.sr())
+    enhanced = enhance(df_model, df_state, audio)
+    save_audio(denoised_file_path, enhanced, df_state.sr())
 
 def transcribe(audio_file_path, target_file_path):
     result = model.transcribe(audio_file_path, language="en")
@@ -31,6 +42,13 @@ while True:
                 continue
             file.resolve()
             source_file_path = str(file)
+
+            if enable_denoise:
+                denoised_file_path = '{}.{}'.format(source_file_path, denoised_suffix)
+                if not Path(denoised_file_path).exists():
+                    print("Denoising {}".format(source_file_path))
+                    denoise(source_file_path, denoised_file_path)
+
             target_file_path = '{}.{}'.format(source_file_path, target_file_extension)
             if Path(target_file_path).exists():
                 continue
