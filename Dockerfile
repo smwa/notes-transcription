@@ -1,6 +1,6 @@
 FROM python:3.12
 WORKDIR /usr/src/app
-RUN apt update && apt install -y rustc cargo ffmpeg libsndfile1
+RUN apt update && apt install -y rustc cargo ffmpeg libsndfile1 git
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 RUN python -c "import whisper;whisper.load_model('turbo')"
