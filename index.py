@@ -4,6 +4,7 @@ from time import sleep
 from tempfile import NamedTemporaryFile
 import subprocess
 
+import torch
 import whisper
 
 print("Starting v4")
@@ -16,11 +17,13 @@ enable_denoise = True
 denoised_suffix = environ.get('DENOISED_SUFFIX', 'denoised.wav')
 
 file_extensions = [".{}".format(f) for f in file_extensions.split(',')]
-model = whisper.load_model('large')
+model = whisper.load_model('turbo')
 
 if enable_denoise:
     from df.enhance import enhance, init_df, load_audio, save_audio
     df_model, df_state, _ = init_df()
+
+DENOISE_CHUNK_SECONDS = int(environ.get('DENOISE_CHUNK_SECONDS', '30'))
 
 def denoise(audio_file_path, denoised_file_path):
     with NamedTemporaryFile(suffix='.wav', delete=False) as tmp:
@@ -31,7 +34,14 @@ def denoise(audio_file_path, denoised_file_path):
             check=True, capture_output=True
         )
         audio, _ = load_audio(tmp_path, sr=df_state.sr())
-        enhanced = enhance(df_model, df_state, audio)
+        chunk_size = df_state.sr() * DENOISE_CHUNK_SECONDS
+        chunks = audio.split(chunk_size, dim=-1)
+        enhanced_chunks = []
+        with torch.no_grad():
+            for chunk in chunks:
+                enhanced_chunks.append(enhance(df_model, df_state, chunk))
+        enhanced = torch.cat(enhanced_chunks, dim=-1)
+        del chunks, enhanced_chunks
         save_audio(denoised_file_path, enhanced, df_state.sr())
     finally:
         Path(tmp_path).unlink(missing_ok=True)
