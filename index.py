@@ -15,7 +15,7 @@ file_extensions = environ.get('FILE_EXTENSIONS', 'mp3')
 target_file_extension = environ.get('TARGET_FILE_EXTENSION', 'md')
 enable_denoise = True
 denoised_suffix = environ.get('DENOISED_SUFFIX', 'denoised.wav')
-
+denoised_file_infix = '.denoised.'
 file_extensions = [".{}".format(f) for f in file_extensions.split(',')]
 model = whisper.load_model('medium')
 
@@ -63,6 +63,12 @@ def transcribe(audio_file_path, target_file_path):
             f.write("\n")
 
 while True:
+    for wav_file in search_path.glob('**/*.wav'):
+        if not wav_file.is_file():
+            continue
+        print("Converting {} to mp3".format(wav_file))
+        convert_wav_to_mp3(wav_file)
+
     for extension in file_extensions:
         files = search_path.glob('**/*{}'.format(extension))
         for file in files:
@@ -71,7 +77,8 @@ while True:
                 continue
             file.resolve()
             source_file_path = str(file)
-            if denoised_suffix in file.name:
+
+            if denoised_file_infix in file.name:
                 continue
 
             if enable_denoise:
@@ -85,11 +92,5 @@ while True:
                 continue
             print("Transcribing {}".format(source_file_path))
             transcribe(source_file_path, target_file_path)
-
-    for wav_file in search_path.glob('**/*.wav'):
-        if not wav_file.is_file():
-            continue
-        print("Converting {} to mp3".format(wav_file))
-        convert_wav_to_mp3(wav_file)
 
     sleep(wait_time)
